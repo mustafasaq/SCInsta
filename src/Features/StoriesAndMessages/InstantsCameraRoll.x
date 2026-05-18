@@ -189,8 +189,43 @@ static const char kSCIPickerDelegateKey;
 
 
 // ---------------------------------------------------------------------------
+// Discovery hook: log every VC that looks Quicksnap/Camera-related
+// This runs on ALL view controllers — helps find the real class name.
+// Remove once the correct class is identified.
+// ---------------------------------------------------------------------------
+
+%hook UIViewController
+
+- (void)viewDidAppear:(BOOL)animated {
+    %orig;
+
+    NSString *className = NSStringFromClass([self class]);
+    NSString *lower = [className lowercaseString];
+
+    if ([lower containsString:@"quicksnap"] ||
+        [lower containsString:@"instant"] ||
+        ([lower containsString:@"camera"] && ![lower containsString:@"permission"])) {
+        NSLog(@"[SCInsta] 🔍 FOUND VC: %@", className);
+
+        // Also dump methods to help find the capture selector
+        unsigned int methodCount = 0;
+        Method *methods = class_copyMethodList([self class], &methodCount);
+        NSLog(@"[SCInsta] 🔍 %@ has %u methods:", className, methodCount);
+        for (unsigned int i = 0; i < methodCount; i++) {
+            SEL sel = method_getName(methods[i]);
+            NSLog(@"[SCInsta]   → %@", NSStringFromSelector(sel));
+        }
+        free(methods);
+    }
+}
+
+%end
+
+
+// ---------------------------------------------------------------------------
 // Constructor — log that the hook loaded
 // ---------------------------------------------------------------------------
 %ctor {
     NSLog(@"[SCInsta] InstantsCameraRoll hook loaded");
 }
+
