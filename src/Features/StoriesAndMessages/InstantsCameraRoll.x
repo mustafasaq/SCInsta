@@ -113,6 +113,9 @@ static const char kSCIPickerDelegateKey;
 // Hook: IGQuicksnapCameraViewController
 // ---------------------------------------------------------------------------
 
+@interface IGQuicksnapCameraViewController : UIViewController
+@end
+
 %hook IGQuicksnapCameraViewController
 
 - (void)viewDidLoad {
