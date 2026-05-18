@@ -205,15 +205,15 @@ static const char kSCIPickerDelegateKey;
     if ([lower containsString:@"quicksnap"] ||
         [lower containsString:@"instant"] ||
         ([lower containsString:@"camera"] && ![lower containsString:@"permission"])) {
-        NSLog(@"[SCInsta] 🔍 FOUND VC: %@", className);
+        os_log(OS_LOG_DEFAULT, "[SCInsta] FOUND VC: %{public}s", className.UTF8String);
 
         // Also dump methods to help find the capture selector
         unsigned int methodCount = 0;
         Method *methods = class_copyMethodList([self class], &methodCount);
-        NSLog(@"[SCInsta] 🔍 %@ has %u methods:", className, methodCount);
+        os_log(OS_LOG_DEFAULT, "[SCInsta] %{public}s has %u methods:", className.UTF8String, methodCount);
         for (unsigned int i = 0; i < methodCount; i++) {
             SEL sel = method_getName(methods[i]);
-            NSLog(@"[SCInsta]   → %@", NSStringFromSelector(sel));
+            os_log(OS_LOG_DEFAULT, "[SCInsta]   -> %{public}s", NSStringFromSelector(sel).UTF8String);
         }
         free(methods);
     }
