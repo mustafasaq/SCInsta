@@ -117,7 +117,62 @@ static const char kSCIPickerDelegateKey;
 @interface _TtC23IGQuickSnapCreationCore33IGQuickSnapCreationViewController : UIViewController
 @end
 
+@interface UIView (SCIDump)
+- (void)sc_dumpControls;
+@end
+
+@implementation UIView (SCIDump)
+- (void)sc_dumpControls {
+    if ([self isKindOfClass:[UIControl class]]) {
+        UIControl *control = (UIControl *)self;
+        NSSet *targets = [control allTargets];
+        for (id target in targets) {
+            NSArray *actions = [control actionsForTarget:target forControlEvent:UIControlEventAllEvents];
+            if (actions.count > 0) {
+                os_log(OS_LOG_DEFAULT, "[SCInsta] 🔘 BUTTON FOUND: %{public}s", class_getName([self class]));
+                os_log(OS_LOG_DEFAULT, "[SCInsta]   Target: %{public}s", class_getName([target class]));
+                for (NSString *action in actions) {
+                    os_log(OS_LOG_DEFAULT, "[SCInsta]   Action: %{public}s", action.UTF8String);
+                }
+            }
+        }
+    }
+    for (UIView *subview in self.subviews) {
+        [subview sc_dumpControls];
+    }
+}
+@end
+
 %hook _TtC23IGQuickSnapCreationCore33IGQuickSnapCreationViewController
+
+- (void)viewDidAppear:(BOOL)animated {
+    %orig;
+    
+    os_log(OS_LOG_DEFAULT, "[SCInsta] 🔍 --- DIAGNOSTIC DUMP START ---");
+    
+    // 1. Dump Child VCs
+    os_log(OS_LOG_DEFAULT, "[SCInsta] 📂 Child View Controllers:");
+    for (UIViewController *child in self.childViewControllers) {
+        os_log(OS_LOG_DEFAULT, "[SCInsta]   -> %{public}s", class_getName([child class]));
+    }
+    
+    // 2. Dump Ivars
+    os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 Ivars:");
+    unsigned int ivarCount = 0;
+    Ivar *ivars = class_copyIvarList([self class], &ivarCount);
+    for (unsigned int i = 0; i < ivarCount; i++) {
+        const char *name = ivar_getName(ivars[i]);
+        const char *type = ivar_getTypeEncoding(ivars[i]);
+        os_log(OS_LOG_DEFAULT, "[SCInsta]   -> %{public}s %{public}s", type ? type : "", name ? name : "");
+    }
+    free(ivars);
+    
+    // 3. Dump Buttons and Targets
+    os_log(OS_LOG_DEFAULT, "[SCInsta] 🎯 Button Targets:");
+    [self.view sc_dumpControls];
+    
+    os_log(OS_LOG_DEFAULT, "[SCInsta] 🔍 --- DIAGNOSTIC DUMP END ---");
+}
 
 - (void)viewDidLoad {
     %orig;
