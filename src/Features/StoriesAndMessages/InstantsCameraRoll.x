@@ -110,13 +110,14 @@ static const char kSCIPickerDelegateKey;
 
 
 // ---------------------------------------------------------------------------
-// Hook: IGQuicksnapCameraViewController
+// Hook: IGQuickSnapCreationCore.IGQuickSnapCreationViewController
+// (Swift-mangled name for Logos compatibility)
 // ---------------------------------------------------------------------------
 
-@interface IGQuicksnapCameraViewController : UIViewController
+@interface _TtC23IGQuickSnapCreationCore33IGQuickSnapCreationViewController : UIViewController
 @end
 
-%hook IGQuicksnapCameraViewController
+%hook _TtC23IGQuickSnapCreationCore33IGQuickSnapCreationViewController
 
 - (void)viewDidLoad {
     %orig;
