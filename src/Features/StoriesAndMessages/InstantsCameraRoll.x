@@ -161,6 +161,15 @@ static const char kSCIPickerDelegateKey;
     if (delegateIvar) {
         id delegateVal = object_getIvar(self, delegateIvar);
         os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 IGQuickSnapCreationViewController delegate is: %{public}s", class_getName([delegateVal class]));
+        
+        unsigned int methodCount = 0;
+        Method *methods = class_copyMethodList([delegateVal class], &methodCount);
+        os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 Delegate has %u methods:", methodCount);
+        for (unsigned int i = 0; i < methodCount; i++) {
+            SEL sel = method_getName(methods[i]);
+            os_log(OS_LOG_DEFAULT, "[SCInsta]   -> %{public}s", NSStringFromSelector(sel).UTF8String);
+        }
+        free(methods);
     } else {
         os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 No 'delegate' ivar found.");
     }
