@@ -156,20 +156,14 @@ static const char kSCIPickerDelegateKey;
         os_log(OS_LOG_DEFAULT, "[SCInsta]   -> %{public}s", class_getName([child class]));
     }
     
-    // 2. Dump Ivars
-    os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 Ivars:");
-    unsigned int ivarCount = 0;
-    Ivar *ivars = class_copyIvarList([self class], &ivarCount);
-    for (unsigned int i = 0; i < ivarCount; i++) {
-        const char *name = ivar_getName(ivars[i]);
-        const char *type = ivar_getTypeEncoding(ivars[i]);
-        os_log(OS_LOG_DEFAULT, "[SCInsta]   -> %{public}s %{public}s", type ? type : "", name ? name : "");
+    // 2. Dump specific Ivar values (specifically `delegate`)
+    Ivar delegateIvar = class_getInstanceVariable([self class], "delegate");
+    if (delegateIvar) {
+        id delegateVal = object_getIvar(self, delegateIvar);
+        os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 IGQuickSnapCreationViewController delegate is: %{public}s", class_getName([delegateVal class]));
+    } else {
+        os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 No 'delegate' ivar found.");
     }
-    free(ivars);
-    
-    // 3. Dump Buttons and Targets
-    os_log(OS_LOG_DEFAULT, "[SCInsta] 🎯 Button Targets:");
-    [self.view sc_dumpControls];
     
     os_log(OS_LOG_DEFAULT, "[SCInsta] 🔍 --- DIAGNOSTIC DUMP END ---");
 }
@@ -273,6 +267,27 @@ static const char kSCIPickerDelegateKey;
         }
         free(methods);
     }
+}
+
+%end
+
+
+%hook AVCapturePhotoOutput
+
+- (void)capturePhotoWithSettings:(AVCapturePhotoSettings *)settings delegate:(id)delegate {
+    %orig;
+    os_log(OS_LOG_DEFAULT, "[SCInsta] 📸 REAL PHOTO CAPTURED BY AVFOUNDATION!");
+    os_log(OS_LOG_DEFAULT, "[SCInsta]   -> Delegate Class: %{public}s", class_getName([delegate class]));
+    
+    // Dump methods of the delegate class to see what Instagram uses
+    unsigned int methodCount = 0;
+    Method *methods = class_copyMethodList([delegate class], &methodCount);
+    os_log(OS_LOG_DEFAULT, "[SCInsta]   -> Delegate has %u methods:", methodCount);
+    for (unsigned int i = 0; i < methodCount; i++) {
+        SEL sel = method_getName(methods[i]);
+        os_log(OS_LOG_DEFAULT, "[SCInsta]      -> %{public}s", NSStringFromSelector(sel).UTF8String);
+    }
+    free(methods);
 }
 
 %end
