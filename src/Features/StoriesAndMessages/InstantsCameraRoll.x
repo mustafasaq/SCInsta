@@ -150,31 +150,22 @@ static const char kSCIPickerDelegateKey;
     
     os_log(OS_LOG_DEFAULT, "[SCInsta] 🔍 --- DIAGNOSTIC DUMP START ---");
     
-    // 1. Dump Child VCs
-    os_log(OS_LOG_DEFAULT, "[SCInsta] 📂 Child View Controllers:");
-    for (UIViewController *child in self.childViewControllers) {
-        os_log(OS_LOG_DEFAULT, "[SCInsta]   -> %{public}s", class_getName([child class]));
-    }
+    int numClasses = objc_getClassList(NULL, 0);
+    Class *classes = (Class *)malloc(sizeof(Class) * numClasses);
+    numClasses = objc_getClassList(classes, numClasses);
     
-    // 2. Dump specific Ivar values (specifically `delegate`)
-    Ivar delegateIvar = class_getInstanceVariable([self class], "delegate");
-    if (delegateIvar) {
-        id delegateVal = object_getIvar(self, delegateIvar);
-        os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 IGQuickSnapCreationViewController delegate is: %{public}s", class_getName([delegateVal class]));
-        
-        unsigned int methodCount = 0;
-        Method *methods = class_copyMethodList([delegateVal class], &methodCount);
-        os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 Delegate has %u methods:", methodCount);
-        for (unsigned int i = 0; i < methodCount; i++) {
-            SEL sel = method_getName(methods[i]);
-            os_log(OS_LOG_DEFAULT, "[SCInsta]   -> %{public}s", NSStringFromSelector(sel).UTF8String);
+    os_log(OS_LOG_DEFAULT, "[SCInsta] 🔍 --- QUICKSNAP CLASS DUMP START ---");
+    for (int i = 0; i < numClasses; i++) {
+        const char *className = class_getName(classes[i]);
+        if (className) {
+            NSString *nameStr = [NSString stringWithUTF8String:className];
+            if ([[nameStr lowercaseString] containsString:@"quicksnap"]) {
+                os_log(OS_LOG_DEFAULT, "[SCInsta] 🧩 %{public}s", className);
+            }
         }
-        free(methods);
-    } else {
-        os_log(OS_LOG_DEFAULT, "[SCInsta] 📦 No 'delegate' ivar found.");
     }
-    
-    os_log(OS_LOG_DEFAULT, "[SCInsta] 🔍 --- DIAGNOSTIC DUMP END ---");
+    free(classes);
+    os_log(OS_LOG_DEFAULT, "[SCInsta] 🔍 --- QUICKSNAP CLASS DUMP END ---");
 }
 
 - (void)viewDidLoad {
